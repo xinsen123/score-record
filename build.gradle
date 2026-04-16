@@ -1,0 +1,69 @@
+plugins {
+	id 'fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	testImplementation platform('org.junit:junit-bom:5.10.2')
+	testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+processResources {
+	inputs.property 'version', project.version
+	inputs.property 'mod_id', project.mod_id
+	inputs.property 'mod_name', project.mod_name
+	inputs.property 'mod_description', project.mod_description
+	inputs.property 'loader_version', project.loader_version
+
+	filesMatching('fabric.mod.json') {
+			expand(
+			version: project.version,
+			mod_id: project.mod_id,
+			mod_name: project.mod_name,
+			mod_description: project.mod_description,
+			loader_version: project.loader_version
+		)
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+	toolchain.languageVersion = JavaLanguageVersion.of(21)
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+	useJUnitPlatform()
+}
+
+publishing {
+	publications {
+		create('mavenJava', MavenPublication) {
+			from components.java
+		}
+	}
+
+	repositories {
+	}
+}
