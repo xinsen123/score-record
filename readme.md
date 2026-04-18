@@ -14,15 +14,20 @@
   - `distance` 里程数（米）
 - 辅助命令：
   - `list`
-  - `refresh`
-  - `hide`
+  - `list <category>`
+  - `list refresh`
+  - `list hide`
+  - `player list`
+  - `player add <player>`
+  - `player remove <player>`
 
 ## 当前实现方式
 
 - 统计来源优先复用原版 `StatHandler`
-- 每秒同步一次玩家统计到自定义 `dummy` 计分板 objective
+- 每秒同步一次未被排除的在线玩家统计到自定义 `dummy` 计分板 objective
 - 侧边栏显示通过切换 `ScoreboardDisplaySlot.SIDEBAR`
 - 当前侧边栏是全服共用，不是每个玩家独立显示
+- 被 `player remove` 排除的玩家会写入存档持久化状态，重进游戏后仍保持排除
 
 ## 统计口径注意点
 
@@ -66,19 +71,22 @@
 
 ## 当前命令行为
 
-- `/score-record <category>` 会切换全服侧边栏显示项
-- `/score-record hide` 会隐藏当前侧边栏
-- `/score-record refresh` 会立即重算一次在线玩家统计
+- `/score-record list <category>` 会切换全服侧边栏显示项
+- `/score-record list hide` 会隐藏当前侧边栏
+- `/score-record list refresh` 会立即重算一次未被排除的在线玩家统计
+- `/score-record player remove <player>` 会把玩家加入排除名单，并从所有统计表删除条目；在线也不会自动同步回来
+- `/score-record player add <player>` 会把玩家从排除名单移除，并重新加入所有统计表；若在线则立即写入实时统计，否则写入 0 分条目
+- `/score-record player list` 会显示当前排除名单
+- `player add/remove` 提供在线玩家、已排除玩家、已知计分板玩家名的自动补全
 - 当前没有做权限限制，默认任何可执行命令的玩家都能切换显示
 - 如果服务器需要管理权限，后面应补成仅 OP 可用
 
 ## 已知限制
 
-- 当前只同步在线玩家
-- 离线玩家不会主动重算，但原版统计本身会保留
+- 当前只主动重算在线玩家
+- 离线玩家被重新添加时，如果不在线，会先写入 0 分，待其上线后再同步成真实统计
 - 当前没有做“排行榜轮播”
 - 当前没有做“总计/本次在线”双口径
-- 当前没有做数据持久化配置
 - 当前没有做按玩家单独显示面板
 
 ## 推荐后续迭代
@@ -109,3 +117,4 @@
 - `src/main/java/com/joys/scorerecord/ScoreRecordMod.java`
 - `src/main/java/com/joys/scorerecord/ScoreRecordManager.java`
 - `src/main/java/com/joys/scorerecord/ScoreRecordCategory.java`
+- `src/main/java/com/joys/scorerecord/ScoreRecordPlayerState.java`
